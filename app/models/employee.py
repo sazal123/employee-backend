@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String, Boolean, Date, Float, JSON, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Boolean, Date, Float, JSON, ForeignKey, Text, DateTime
 from sqlalchemy.orm import relationship
+from datetime import datetime
 from ..db import Base
+
 
 class Employee(Base):
     __tablename__ = 'employees'
@@ -25,5 +27,7 @@ class Employee(Base):
     is_active = Column(Boolean, default=True)
     profile_picture = Column(String(500), nullable=True)
     resume_path = Column(String(500), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     department = relationship('Department', backref='employees')
