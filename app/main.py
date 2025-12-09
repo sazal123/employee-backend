@@ -4,7 +4,7 @@ from app.core.config import settings
 import os
 
 from .db import init_db, engine
-from .routers import departments, employees, job_positions, job_titles
+from .routers import departments, employees, job_positions, job_titles, work_locations
 
 app = FastAPI(title=settings.APP_NAME)
 
@@ -20,6 +20,7 @@ app.include_router(departments.router, prefix='/departments', tags=['Departments
 app.include_router(employees.router, prefix='/employees', tags=['Employees'])
 app.include_router(job_positions.router, prefix='/job_positions',tags=['JobPositions'])
 app.include_router(job_titles.router, prefix='/job_titles',tags=['JobTitles'])
+app.include_router(work_locations.router, prefix='/work_locations',tags=['WorkLocations'])
 
 @app.on_event("startup")
 def on_startup():
