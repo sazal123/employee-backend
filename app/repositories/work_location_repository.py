@@ -13,8 +13,9 @@ class WorkLocationRepository:
         self.db.refresh(obj)
         return obj
 
-    def get_all(self, page, limit, search, is_active, city, country):
+    def get_all(self, skip: int = 0, limit: int = 12, search: str = None, is_active: bool = None, city: str = None, country: str = None):
         query = self.db.query(WorkLocation)
+
         if search:
             query = query.filter(WorkLocation.name.ilike(f"%{search}%"))
         if is_active is not None:
@@ -23,7 +24,12 @@ class WorkLocationRepository:
             query = query.filter(WorkLocation.city == city)
         if country:
             query = query.filter(WorkLocation.country == country)
-        return query.offset((page - 1) * limit).limit(limit).all()
+
+        q = query.order_by(WorkLocation.id.asc())
+        total = q.count()
+        items = query.offset(skip).limit(limit).all()
+
+        return items, total
 
     def get_by_id(self, id: int):
         return self.db.query(WorkLocation).filter(WorkLocation.id == id).first()

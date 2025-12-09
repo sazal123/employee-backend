@@ -18,8 +18,24 @@ class WorkLocationService:
             raise HTTPException(status_code=500, detail="Internal server error")
     
 
-    def list(self, page, limit, search, is_active, city, country):
-        return self.repo.get_all(page, limit, search, is_active, city, country)
+    def list(self, page: int = 1, limit: int = 10, search: str = None, is_active = None, city = None, country = None):
+        skip = (page - 1) * limit
+        items, total = self.repo.get_all(
+            skip=skip,
+            limit=limit,
+            search=search,
+            city=city,
+            country=country,
+            is_active=is_active
+        )
+
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "pages": (total + limit - 1) // limit,
+        }
 
     def get(self, id: int):
         obj = self.repo.get_by_id(id)

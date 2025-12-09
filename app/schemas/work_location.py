@@ -21,6 +21,23 @@ class WorkLocationCreate(WorkLocationBase):
 class WorkLocationUpdate(WorkLocationBase):
     pass
 
+class WorrkLocationRead(WorkLocationBase):
+    id: int
+    name: str
+    code: str
+    address: str
+    city: str
+    state: str
+    country: str
+    postal_code: str
+    phone: str
+    email: str
+    latitude: float
+    longitude: float
+    is_active: bool = True
+    class Config:
+        from_attributes = True
+
 class WorkLocationResponse(WorkLocationBase):
     id: int
 
