@@ -29,6 +29,8 @@ class JobPositionRepository:
         if is_active is not None:
             query = query.filter(JobPosition.is_active == is_active)
 
+        q = q.order_by(JobPosition.id.asc())
+
         return query.offset((page - 1) * limit).limit(limit).all()
 
     def get_by_id(self, id: int):

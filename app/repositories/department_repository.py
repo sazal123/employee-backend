@@ -14,7 +14,7 @@ class DepartmentRepository:
     def get(self, dept_id: int):
         return self.db.query(Department).filter(Department.id == dept_id).first()
 
-    def list(self, skip: int = 0, limit: int = 10, search: str = None, is_active: bool = None, parent_department_id: int = None):
+    def list(self, skip: int = 0, limit: int = 12, search: str = None, is_active: bool = None, parent_department_id: int = None):
         q = self.db.query(Department)
         if search:
             q = q.filter(Department.name.ilike(f"%{search}%"))
@@ -22,6 +22,7 @@ class DepartmentRepository:
             q = q.filter(Department.is_active == is_active)
         if parent_department_id is not None:
             q = q.filter(Department.parent_department_id == parent_department_id)
+        q = q.order_by(Department.id.asc())
         total = q.count()
         items = q.offset(skip).limit(limit).all()
         return items, total
