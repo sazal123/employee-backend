@@ -35,3 +35,4 @@ class DepartmentRepository:
     def delete(self, dept: Department):
         self.db.delete(dept)
         self.db.commit()
+        return True
