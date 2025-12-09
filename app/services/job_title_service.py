@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 from ..models.job_title import JobTitle
 from ..schemas.job_title import JobTitleCreate, JobTitleUpdate
 from ..repositories.job_title_repository import JobTitleRepository
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException
 
 class JobTitleService:
     def __init__(self, db: Session):
@@ -9,7 +11,13 @@ class JobTitleService:
 
     def create_job_title(self, payload: JobTitleCreate):
         job_title = JobTitle(**payload.dict())
-        return self.repo.create(job_title)
+        try:
+            return self.repo.create(job_title)
+        except IntegrityError as e:
+            # check if the error is due to unique constraint on code
+            if "unique constraint" in str(e.orig).lower() or "duplicate" in str(e.orig).lower():
+                raise HTTPException(status_code=400, detail="Job Title already exists")
+            raise HTTPException(status_code=500, detail="Internal server error")
 
     def get_job_title(self, id: int):
         return self.repo.get(id)

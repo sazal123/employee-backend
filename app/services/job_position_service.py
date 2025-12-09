@@ -2,6 +2,8 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from ..repositories.job_position_repository import JobPositionRepository
 from ..schemas.job_position import JobPositionCreate, JobPositionUpdate
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException
 
 class JobPositionService:
 
@@ -9,7 +11,13 @@ class JobPositionService:
         self.repo = JobPositionRepository(db)
 
     def create(self, data: JobPositionCreate):
-        return self.repo.create(data)
+        try:
+            return self.repo.create(data)
+        except IntegrityError as e:
+            # check if the error is due to unique constraint on code
+            if "unique constraint" in str(e.orig).lower() or "duplicate" in str(e.orig).lower():
+                raise HTTPException(status_code=400, detail="Job Position already exists")
+            raise HTTPException(status_code=500, detail="Internal server error")
 
     def list(self, page, limit, search, department_id, level, is_active):
         return self.repo.get_all(page, limit, search, department_id, level, is_active)
