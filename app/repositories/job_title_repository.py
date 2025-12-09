@@ -26,7 +26,7 @@ class JobTitleRepository:
         q = query.order_by(JobTitle.id.asc())
         total = q.count()
         items = query.offset(skip).limit(limit).all()
-        return {"total": total, "items": items}
+        return items, total
 
     def update(self, obj: JobTitle):
         self.db.commit()

@@ -31,9 +31,9 @@ def list_job_titles(
     db: Session = Depends(get_db)
 ):
     service = JobTitleService(db)
-    result = service.list_job_titles(page, limit, search, job_position_id, is_active)
+    result = service.list_job_titles(page = page, limit = limit, search = search, job_position_id = job_position_id, is_active = is_active)
     result["items"] = [JobTitleRead.from_orm(item) for item in result["items"]]
-    return {"success": True, "data": result}
+    return {'success': True, 'data': result}
 
 
 @router.get("/{job_title_id}", response_model=dict)

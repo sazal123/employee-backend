@@ -24,7 +24,21 @@ class JobTitleService:
 
     def list_job_titles(self, page: int = 1, limit: int = 10, search: str = None, job_position_id: int = None, is_active: bool = None):
         skip = (page - 1) * limit
-        return self.repo.list(skip=skip, limit=limit, search=search, job_position_id=job_position_id, is_active=is_active)
+        items, total = self.repo.list(
+            skip=skip,
+            limit=limit,
+            search=search,
+            job_position_id=job_position_id,
+            is_active=is_active
+        )
+
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "pages": (total + limit - 1) // limit,
+        }
 
     def update_job_title(self, id: int, payload: JobTitleUpdate):
         obj = self.repo.get(id)
