@@ -23,8 +23,8 @@ class JobTitleRepository:
         if is_active is not None:
             query = query.filter(JobTitle.is_active == is_active)
 
-        q = q.order_by(JobTitle.id.asc())
-        total = query.count()
+        q = query.order_by(JobTitle.id.asc())
+        total = q.count()
         items = query.offset(skip).limit(limit).all()
         return {"total": total, "items": items}
 
