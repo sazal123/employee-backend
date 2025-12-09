@@ -19,8 +19,26 @@ class JobPositionService:
                 raise HTTPException(status_code=400, detail="Job Position already exists")
             raise HTTPException(status_code=500, detail="Internal server error")
 
-    def list(self, page, limit, search, department_id, level, is_active):
-        return self.repo.get_all(page, limit, search, department_id, level, is_active)
+    def list(self, page=1, limit=12, search = None, department_id = None, level = None, is_active = None ):
+
+        skip = (page - 1) * limit
+
+        items, total = self.repo.get_all(
+            skip=skip,
+            limit=limit,
+            search=search,
+            is_active=is_active,
+            department_id=department_id,
+            level=level,
+        )
+
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "pages": (total + limit - 1) // limit,
+        }
 
     def get(self, id: int):
         obj = self.repo.get_by_id(id)

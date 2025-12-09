@@ -29,19 +29,23 @@ def create_job_position(payload: JobPositionCreate, db: Session = Depends(get_db
 # 2.2 List Job Positions
 @router.get("/", response_model=dict)
 def list_job_positions(
-    page: int = 1, limit: int = 10,
+    page: int = 1,
+    limit: int = 10,
     search: str = None,
     department_id: int = None,
     level: str = None,
     is_active: bool = None,
     db: Session = Depends(get_db)
 ):
-    service = JobPositionService(db)
-    items = service.list(page, limit, search, department_id, level, is_active)
     
-    # Convert to Pydantic schemas
-    job_positions = [JobPositionRead.from_orm(item) for item in items]
-    return {"success": True, "data": job_positions}
+    service = JobPositionService(db)
+    result = service.list(page=page, limit=limit, search=search, department_id=department_id, level=level, is_active=is_active)
+    
+    # Convert SQLAlchemy models to Pydantic
+    result['items'] = [JobPositionRead.from_orm(dept) for dept in result['items']]
+    return {'success': True, 'data': result}
+
+
 
 
 

@@ -14,7 +14,7 @@ class JobPositionRepository:
         self.db.refresh(obj)
         return obj
 
-    def get_all(self, page, limit, search, department_id, level, is_active):
+    def get_all(self, skip: int = 0, limit: int = 12, search: str = None, department_id: int = None, level: str = None, is_active: bool = None):
         query = self.db.query(JobPosition)
 
         if search:
@@ -29,9 +29,11 @@ class JobPositionRepository:
         if is_active is not None:
             query = query.filter(JobPosition.is_active == is_active)
 
-        q = q.order_by(JobPosition.id.asc())
+        q = query.order_by(JobPosition.id.asc())
+        total= q.count()
+        items = q.offset(skip).limit(limit).all()
 
-        return query.offset((page - 1) * limit).limit(limit).all()
+        return items, total
 
     def get_by_id(self, id: int):
         return self.db.query(JobPosition).filter(JobPosition.id == id).first()
