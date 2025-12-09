@@ -1,7 +1,6 @@
-from sqlalchemy import Column, Integer, String, Boolean, Text, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from ..db import Base
-from datetime import datetime
 
 class Department(Base):
     __tablename__ = 'departments'
@@ -12,9 +11,6 @@ class Department(Base):
     parent_department_id = Column(Integer, ForeignKey('departments.id'), nullable=True)
     manager_id = Column(Integer, nullable=True)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     parent = relationship('Department', remote_side=[id])
     job_positions = relationship("JobPosition", back_populates="department")
-

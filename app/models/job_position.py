@@ -18,4 +18,5 @@ class JobPosition(Base):
 
     level = Column(String(50), nullable=True)
     is_active = Column(Boolean, default=True)
+    job_titles = relationship("JobTitle", back_populates="job_position")
 
