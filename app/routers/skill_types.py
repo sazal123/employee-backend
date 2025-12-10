@@ -26,12 +26,11 @@ def list_skill_types(
     limit: int = 10,
     search: str | None = None,
     is_active: bool | None = None,
-    city: str | None = None,
-    country: str | None = None,
+    color: str | None = None,
     db: Session = Depends(get_db)
 ):
     service = SkillTypeService(db)
-    result = service.list(page = page, limit = limit, search = search, is_active = is_active, city = city, country = country)
+    result = service.list(page = page, limit = limit, search = search, is_active = is_active, color=color)
     result["items"] = [SkillTypeRead.from_orm(item) for item in result["items"]]
     return {'success': True, 'data': result}
 

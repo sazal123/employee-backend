@@ -16,6 +16,14 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 def init_db(retries=5):
     # Try to connect a few times (useful when running with docker-compose)
     from sqlalchemy.exc import OperationalError
