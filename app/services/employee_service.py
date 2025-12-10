@@ -1,52 +1,62 @@
+from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from ..repositories.employee_repository import EmployeeRepository
-from ..models.employee import Employee
-from ..schemas.employee import EmployeeCreate
-from datetime import date
+from ..schemas.employee import EmployeeCreate, EmployeeUpdate
+
 
 class EmployeeService:
     def __init__(self, db: Session):
         self.repo = EmployeeRepository(db)
 
-    def create_employee(self, payload: EmployeeCreate):
-        emp = Employee(
-            employee_code=payload.employee_code,
-            first_name=payload.first_name,
-            last_name=payload.last_name,
-            email=payload.email,
-            phone=payload.phone,
-            date_of_birth=payload.date_of_birth,
-            gender=payload.gender,
-            nationality=payload.nationality,
-            national_id=payload.national_id,
-            department_id=payload.department_id,
-            job_position_id=payload.job_position_id,
-            work_location_id=payload.work_location_id,
-            manager_id=payload.manager_id,
-            employment_type=payload.employment_type,
-            date_of_joining=payload.date_of_joining,
-            salary=payload.salary,
-            tags=payload.tag_ids,
-            is_active=payload.is_active,
-            profile_picture=payload.profile_picture
-        )
-        return self.repo.create(emp)
+    def create(self, data: EmployeeCreate, profile_picture_file: UploadFile = None):
+        try:
+            return self.repo.create(data, profile_picture_file)
+        except IntegrityError as e:
+            # check if the error is due to unique constraint on employee_code or email
+            if "unique constraint" in str(e.orig).lower() or "duplicate" in str(e.orig).lower():
+                if "employee_code" in str(e.orig).lower():
+                    raise HTTPException(status_code=400, detail="Employee code already exists")
+                elif "email" in str(e.orig).lower():
+                    raise HTTPException(status_code=400, detail="Email already exists")
+                raise HTTPException(status_code=400, detail="Employee already exists")
+            raise HTTPException(status_code=500, detail="Internal server error")
+    
 
-    def get_employee(self, emp_id: int):
-        return self.repo.get(emp_id)
-
-    def list_employees(self, page: int = 1, limit: int = 10, search: str = None):
+    def list(self, page: int = 1, limit: int = 10, search: str = None, is_active = None, 
+             department_id: int = None, employment_type: str = None):
         skip = (page - 1) * limit
-        items, total = self.repo.list(skip=skip, limit=limit, search=search)
-        pages = (total + limit - 1) // limit if total else 0
+        items, total = self.repo.get_all(
+            skip=skip,
+            limit=limit,
+            search=search,
+            is_active=is_active,
+            department_id=department_id,
+            employment_type=employment_type
+        )
+
         return {
-            'items': items,
-            'total': total,
-            'page': page,
-            'limit': limit,
-            'pages': pages
+            "items": items,
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "pages": (total + limit - 1) // limit,
         }
 
-    def attach_resume(self, emp, path: str):
-        emp.resume_path = path
-        return self.repo.update(emp)
+    def get(self, id: int):
+        obj = self.repo.get_by_id(id)
+        if not obj:
+            raise HTTPException(404, "Employee not found")
+        return obj
+
+    def update(self, id: int, data: EmployeeUpdate, profile_picture_file: UploadFile = None):
+        obj = self.repo.update(id, data, profile_picture_file)
+        if not obj:
+            raise HTTPException(404, "Employee not found")
+        return obj
+
+    def delete(self, id: int):
+        deleted = self.repo.delete(id)
+        if not deleted:
+            raise HTTPException(404, "Employee not found")
+        return {"message": "Deleted successfully"}

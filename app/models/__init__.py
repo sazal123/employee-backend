@@ -6,5 +6,6 @@ from .job_title import JobTitle
 from .work_location import WorkLocation
 from .skill_type import SkillType
 from .skill import Skill
+from .tag import Tag
 
-__all__ = ["Base", "Department", "Employee", "JobPosition", "JobTitle", "WorkLocation", "SkillType", "Skill"]
+__all__ = ["Base", "Department", "Employee", "JobPosition", "JobTitle", "WorkLocation", "SkillType", "Skill", "Tag"]
