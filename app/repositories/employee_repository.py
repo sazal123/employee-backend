@@ -2,15 +2,49 @@ from sqlalchemy.orm import Session
 from ..models.employee import Employee
 from ..schemas.employee import EmployeeCreate, EmployeeUpdate
 import os
-import shutil
-from fastapi import UploadFile
+import base64
+import uuid
 
 
 class EmployeeRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, data: EmployeeCreate, profile_picture_file: UploadFile = None):
+    def _save_profile_picture(self, employee_code: str, base64_image: str) -> str:
+        """Save base64 encoded image to file system"""
+        if not base64_image:
+            return None
+        
+        try:
+            # Check if it's a data URL (data:image/png;base64,...)
+            if base64_image.startswith('data:image'):
+                header, encoded = base64_image.split(',', 1)
+                file_ext = header.split('/')[1].split(';')[0]
+            else:
+                encoded = base64_image
+                file_ext = 'png'  # default
+            
+            # Decode base64
+            image_data = base64.b64decode(encoded)
+            
+            # Create uploads directory
+            uploads_dir = 'uploads/profiles'
+            os.makedirs(uploads_dir, exist_ok=True)
+            
+            # Generate filename
+            filename = f"profile_{employee_code}.{file_ext}"
+            file_path = os.path.join(uploads_dir, filename)
+            
+            # Save file
+            with open(file_path, 'wb') as f:
+                f.write(image_data)
+            
+            return file_path
+        except Exception as e:
+            # If it's not base64 or fails, treat it as URL/path
+            return base64_image
+
+    def create(self, data: EmployeeCreate):
         # Convert nested models to dict for JSON fields
         employee_data = data.dict()
         if employee_data.get('address'):
@@ -18,20 +52,13 @@ class EmployeeRepository:
         if employee_data.get('emergency_contact'):
             employee_data['emergency_contact'] = dict(employee_data['emergency_contact'])
         
-        # Handle profile picture upload
-        if profile_picture_file:
-            uploads_dir = 'uploads/profiles'
-            os.makedirs(uploads_dir, exist_ok=True)
-            # Generate unique filename using employee_code
-            file_extension = os.path.splitext(profile_picture_file.filename)[1]
-            filename = f"profile_{employee_data['employee_code']}{file_extension}"
-            file_path = os.path.join(uploads_dir, filename)
-            
-            # Save the file
-            with open(file_path, 'wb') as buffer:
-                shutil.copyfileobj(profile_picture_file.file, buffer)
-            
-            employee_data['profile_picture'] = file_path
+        # Handle profile picture if it's base64
+        if employee_data.get('profile_picture'):
+            saved_path = self._save_profile_picture(
+                employee_data['employee_code'], 
+                employee_data['profile_picture']
+            )
+            employee_data['profile_picture'] = saved_path
         
         obj = Employee(**employee_data)
         self.db.add(obj)
@@ -66,7 +93,7 @@ class EmployeeRepository:
     def get_by_id(self, id: int):
         return self.db.query(Employee).filter(Employee.id == id).first()
 
-    def update(self, id: int, data: EmployeeUpdate, profile_picture_file: UploadFile = None):
+    def update(self, id: int, data: EmployeeUpdate):
         obj = self.get_by_id(id)
         if not obj:
             return None
@@ -78,8 +105,8 @@ class EmployeeRepository:
         if 'emergency_contact' in update_data and update_data['emergency_contact']:
             update_data['emergency_contact'] = dict(update_data['emergency_contact'])
         
-        # Handle profile picture upload
-        if profile_picture_file:
+        # Handle profile picture if provided
+        if 'profile_picture' in update_data and update_data['profile_picture']:
             # Delete old profile picture if exists
             if obj.profile_picture and os.path.exists(obj.profile_picture):
                 try:
@@ -87,18 +114,11 @@ class EmployeeRepository:
                 except:
                     pass
             
-            uploads_dir = 'uploads/profiles'
-            os.makedirs(uploads_dir, exist_ok=True)
-            # Generate unique filename using employee_code
-            file_extension = os.path.splitext(profile_picture_file.filename)[1]
-            filename = f"profile_{obj.employee_code}{file_extension}"
-            file_path = os.path.join(uploads_dir, filename)
-            
-            # Save the file
-            with open(file_path, 'wb') as buffer:
-                shutil.copyfileobj(profile_picture_file.file, buffer)
-            
-            update_data['profile_picture'] = file_path
+            saved_path = self._save_profile_picture(
+                obj.employee_code, 
+                update_data['profile_picture']
+            )
+            update_data['profile_picture'] = saved_path
         
         for key, value in update_data.items():
             setattr(obj, key, value)

@@ -1,4 +1,4 @@
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from ..repositories.employee_repository import EmployeeRepository
@@ -9,9 +9,9 @@ class EmployeeService:
     def __init__(self, db: Session):
         self.repo = EmployeeRepository(db)
 
-    def create(self, data: EmployeeCreate, profile_picture_file: UploadFile = None):
+    def create(self, data: EmployeeCreate):
         try:
-            return self.repo.create(data, profile_picture_file)
+            return self.repo.create(data)
         except IntegrityError as e:
             # check if the error is due to unique constraint on employee_code or email
             if "unique constraint" in str(e.orig).lower() or "duplicate" in str(e.orig).lower():
@@ -49,8 +49,8 @@ class EmployeeService:
             raise HTTPException(404, "Employee not found")
         return obj
 
-    def update(self, id: int, data: EmployeeUpdate, profile_picture_file: UploadFile = None):
-        obj = self.repo.update(id, data, profile_picture_file)
+    def update(self, id: int, data: EmployeeUpdate):
+        obj = self.repo.update(id, data)
         if not obj:
             raise HTTPException(404, "Employee not found")
         return obj

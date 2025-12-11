@@ -1,7 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import Optional
-import json
 
 from ..db import SessionLocal
 from ..services.employee_service import EmployeeService
@@ -17,15 +15,9 @@ def get_db():
         db.close()
 
 @router.post("/", response_model=dict, status_code=201)
-def create_employee(
-    data: str = Form(...),
-    profile_picture: Optional[UploadFile] = File(None),
-    db: Session = Depends(get_db)
-):
-    # Parse JSON data from form
-    payload = EmployeeCreate(**json.loads(data))
+def create_employee(payload: EmployeeCreate, db: Session = Depends(get_db)):
     service = EmployeeService(db)
-    employee = service.create(payload, profile_picture)
+    employee = service.create(payload)
     return {"success": True, "data": EmployeeRead.from_orm(employee), "message": "Employee created successfully"}
 
 @router.get("/", response_model=dict)
@@ -61,19 +53,11 @@ def get_employee(id: int, db: Session = Depends(get_db)):
     return {'success': True, 'data': schema}
 
 @router.put("/{id}", response_model=dict)
-def update_employee(
-    id: int,
-    data: str = Form(...),
-    profile_picture: Optional[UploadFile] = File(None),
-    db: Session = Depends(get_db)
-):
-    # Parse JSON data from form
-    payload = EmployeeUpdate(**json.loads(data))
+def update_employee(id: int, payload: EmployeeUpdate, db: Session = Depends(get_db)):
     service = EmployeeService(db)
-    record = service.update(id, payload, profile_picture)
+    record = service.update(id, payload)
     if not record:
         raise HTTPException(status_code=404, detail='Employee not found')
-
     schema = EmployeeRead.from_orm(record)
     return {'success': True, 'data': schema, 'message': 'Employee updated successfully'}
 
