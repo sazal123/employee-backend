@@ -25,6 +25,7 @@ class SkillRead(SkillBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    skill_type_name: Optional[str] = None
     
     class Config:
         from_attributes = True

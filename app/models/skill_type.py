@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime
+from sqlalchemy.orm import relationship
 from ..db import Base
 from datetime import datetime
 
@@ -13,3 +14,8 @@ class SkillType(Base):
     sequence = Column(Integer, nullable=True)
     skills_count = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
+
+    skills = relationship("Skill", back_populates="skill_type", lazy="selectin")
+

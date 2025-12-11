@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from ..models.skill import Skill
 from ..schemas.skill import SkillCreate, SkillUpdate
 
@@ -14,7 +14,7 @@ class SkillRepository:
         return obj
 
     def get_all(self, skip: int = 0, limit: int = 12, search: str = None, is_active: bool = None, skill_type_id: int = None):
-        query = self.db.query(Skill)
+        query = self.db.query(Skill).options(selectinload(Skill.skill_type))
 
         if search:
             query = query.filter(Skill.name.ilike(f"%{search}%"))
@@ -26,6 +26,8 @@ class SkillRepository:
         q = query.order_by(Skill.id.asc())
         total = q.count()
         items = query.offset(skip).limit(limit).all()
+        for item in items:
+            item.skill_type_name = item.skill_type.name if item.skill_type else None
 
         return items, total
 

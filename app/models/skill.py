@@ -15,4 +15,4 @@ class Skill(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
-    skill_type = relationship('SkillType', backref='skills')
+    skill_type = relationship("SkillType", back_populates="skills")
