@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from fastapi.staticfiles import StaticFiles
 import os
 
 from .db import init_db, engine
@@ -30,4 +31,7 @@ def on_startup():
     # initialize DB (create tables)
     init_db()
     # create uploads dir if missing
-    os.makedirs('uploads', exist_ok=True)
+    # os.makedirs('uploads', exist_ok=True)
+UPLOADS_DIR = os.path.abspath(os.path.join(os.getcwd(), "uploads"))
+os.makedirs(UPLOADS_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
