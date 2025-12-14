@@ -1,5 +1,6 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from ..models.employee import Employee
+from ..models.tag import Tag
 from ..schemas.employee import EmployeeCreate, EmployeeUpdate
 import os
 import base64
@@ -47,6 +48,10 @@ class EmployeeRepository:
     def create(self, data: EmployeeCreate):
         # Convert nested models to dict for JSON fields
         employee_data = data.dict()
+        
+        # Extract tag_ids before creating employee
+        tag_ids = employee_data.pop('tag_ids', None)
+        
         if employee_data.get('address'):
             employee_data['address'] = dict(employee_data['address'])
         if employee_data.get('emergency_contact'):
@@ -61,6 +66,12 @@ class EmployeeRepository:
             employee_data['profile_picture'] = saved_path
         
         obj = Employee(**employee_data)
+        
+        # Add tags if provided
+        if tag_ids:
+            tags = self.db.query(Tag).filter(Tag.id.in_(tag_ids)).all()
+            obj.tags.extend(tags)
+        
         self.db.add(obj)
         self.db.commit()
         self.db.refresh(obj)
@@ -68,7 +79,7 @@ class EmployeeRepository:
 
     def get_all(self, skip: int = 0, limit: int = 12, search: str = None, is_active: bool = None, 
                 department_id: int = None, employment_type: str = None):
-        query = self.db.query(Employee)
+        query = self.db.query(Employee).options(selectinload(Employee.tags))
 
         if search:
             query = query.filter(
@@ -91,7 +102,7 @@ class EmployeeRepository:
         return items, total
 
     def get_by_id(self, id: int):
-        return self.db.query(Employee).filter(Employee.id == id).first()
+        return self.db.query(Employee).options(selectinload(Employee.tags)).filter(Employee.id == id).first()
 
     def update(self, id: int, data: EmployeeUpdate):
         obj = self.get_by_id(id)
@@ -99,6 +110,10 @@ class EmployeeRepository:
             return None
         
         update_data = data.dict(exclude_unset=True)
+        
+        # Extract tag_ids before updating
+        tag_ids = update_data.pop('tag_ids', None)
+        
         # Convert nested models to dict for JSON fields
         if 'address' in update_data and update_data['address']:
             update_data['address'] = dict(update_data['address'])
@@ -120,8 +135,14 @@ class EmployeeRepository:
             )
             update_data['profile_picture'] = saved_path
         
+        # Update regular fields
         for key, value in update_data.items():
             setattr(obj, key, value)
+        
+        # Update tags if provided
+        if tag_ids is not None:
+            tags = self.db.query(Tag).filter(Tag.id.in_(tag_ids)).all()
+            obj.tags = tags
         
         self.db.commit()
         self.db.refresh(obj)

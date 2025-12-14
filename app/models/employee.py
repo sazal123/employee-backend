@@ -1,7 +1,16 @@
-from sqlalchemy import Column, Integer, String, Boolean, Date, Float, JSON, ForeignKey, Text, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, Date, Float, JSON, ForeignKey, Text, DateTime, Table
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from ..db import Base
+
+
+# Association table for employee-tag many-to-many relationship
+employee_tags = Table(
+    'employee_tags',
+    Base.metadata,
+    Column('employee_id', Integer, ForeignKey('employees.id'), primary_key=True),
+    Column('tag_id', Integer, ForeignKey('tags.id'), primary_key=True)
+)
 
 
 class Employee(Base):
@@ -41,7 +50,6 @@ class Employee(Base):
     # Compensation and tags
     salary = Column(Float, nullable=True)
     work_shift_id = Column(Integer, nullable=True)
-    tag_ids = Column(JSON, nullable=True)  # Store as array of tag IDs
     
     # Status and media
     is_active = Column(Boolean, default=True)
@@ -57,3 +65,4 @@ class Employee(Base):
     job_position = relationship('JobPosition', backref='employees')
     job_title = relationship('JobTitle', backref='employees')
     work_location = relationship('WorkLocation', backref='employees')
+    tags = relationship('Tag', secondary=employee_tags, backref='employees')

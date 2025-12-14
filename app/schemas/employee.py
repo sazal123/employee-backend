@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List, Any
 from datetime import date, datetime
+from .tag import TagRead
 
 
 class Address(BaseModel):
@@ -75,7 +76,7 @@ class EmployeeUpdate(BaseModel):
     salary: Optional[float] = None
     work_shift_id: Optional[int] = None
     tag_ids: Optional[List[int]] = None
-    is_active: Optional[bool] = None
+    is_active: Optional[bool] = True
     profile_picture: Optional[str] = None
 
 
@@ -104,7 +105,7 @@ class EmployeeRead(BaseModel):
     probation_end_date: Optional[date]
     salary: Optional[float]
     work_shift_id: Optional[int]
-    tag_ids: Optional[List[int]]
+    tags: Optional[List[TagRead]] = None
     is_active: bool
     profile_picture: Optional[str]
     created_at: datetime
