@@ -61,6 +61,12 @@ class EmployeeService:
             raise HTTPException(404, "Employee not found")
         return {"message": "Deleted successfully"}
 
+    def upload_resume(self, id: int, resume_file, title: str, resume_type: str):
+        obj = self.repo.upload_resume(id, resume_file, title, resume_type)
+        if not obj:
+            raise HTTPException(404, "Employee not found")
+        return obj
+
     def attach_skill(self, employee_id: int, skill_id: int):
         employee = self.repo.attach_skill(employee_id, skill_id)
         if not employee:
@@ -72,3 +78,6 @@ class EmployeeService:
         if not employee:
             raise HTTPException(404, "Employee or Skill not found")
         return employee
+
+
+    

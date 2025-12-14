@@ -63,6 +63,8 @@ class Employee(Base):
     is_active = Column(Boolean, default=True)
     profile_picture = Column(String(500), nullable=True)
     resume_path = Column(String(500), nullable=True)
+    resume_title = Column(String(255), nullable=True)
+    resume_type = Column(String(50), nullable=True)
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -75,3 +77,4 @@ class Employee(Base):
     work_location = relationship('WorkLocation', backref='employees')
     tags = relationship('Tag', secondary=employee_tags, backref='employees')
     skills = relationship('Skill', secondary=employee_skills, backref='employees')
+    resumes = relationship('Resume', back_populates='employee', cascade='all, delete-orphan')

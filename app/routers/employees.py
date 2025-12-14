@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
 from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
 from ..services.employee_service import EmployeeService
+from ..services.resume_service import ResumeService
 from ..schemas.employee import EmployeeCreate, EmployeeUpdate, EmployeeRead
+from ..schemas.resume import ResumeRead
 
 router = APIRouter()
 
@@ -65,6 +67,30 @@ def update_employee(id: int, payload: EmployeeUpdate, db: Session = Depends(get_
 def delete_employee(id: int, db: Session = Depends(get_db)):
     service = EmployeeService(db)
     return service.delete(id)
+
+@router.post("/{employee_id}/upload-resume", response_model=dict)
+async def upload_resume(
+    employee_id: int,
+    title: str = Form(...),
+    type: str = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    service = ResumeService(db)
+    resume = service.upload_resume(employee_id, title, type, file)
+    return {"success": True, "data": ResumeRead.from_orm(resume), "message": "Resume uploaded successfully"}
+
+@router.get("/{employee_id}/resumes", response_model=dict)
+def get_employee_resumes(employee_id: int, db: Session = Depends(get_db)):
+    service = ResumeService(db)
+    resumes = service.get_employee_resumes(employee_id)
+    return {"success": True, "data": [ResumeRead.from_orm(resume) for resume in resumes]}
+
+@router.delete("/{employee_id}/resumes/{resume_id}", response_model=dict)
+def delete_resume(employee_id: int, resume_id: int, db: Session = Depends(get_db)):
+    service = ResumeService(db)
+    service.delete_resume(employee_id, resume_id)
+    return {"success": True, "message": "Resume deleted successfully"}
 
 @router.post("/{employee_id}/skills/{skill_id}", response_model=dict)
 def attach_skill(employee_id: int, skill_id: int, db: Session = Depends(get_db)):

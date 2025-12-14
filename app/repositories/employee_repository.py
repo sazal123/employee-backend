@@ -190,3 +190,44 @@ class EmployeeRepository:
         self.db.delete(obj)
         self.db.commit()
         return True
+
+    def upload_resume(self, id: int, resume_file, title: str, resume_type: str):
+        """Upload resume file for an employee"""
+        import shutil
+        
+        obj = self.get_by_id(id)
+        if not obj:
+            return None
+        
+        # Delete old resume if exists
+        if obj.resume_path and os.path.exists(obj.resume_path):
+            try:
+                os.remove(obj.resume_path)
+            except:
+                pass
+        
+        # Save new resume
+        uploads_dir = 'uploads/resumes'
+        os.makedirs(uploads_dir, exist_ok=True)
+        
+        # Get file extension
+        file_extension = os.path.splitext(resume_file.filename)[1] or '.pdf'
+        
+        # Generate filename
+        filename = f"resume_{obj.employee_code}{file_extension}"
+        file_path = os.path.join(uploads_dir, filename)
+        
+        # Save file
+        try:
+            with open(file_path, 'wb') as buffer:
+                shutil.copyfileobj(resume_file.file, buffer)
+            
+            obj.resume_path = file_path
+            obj.resume_title = title
+            obj.resume_type = resume_type
+            self.db.commit()
+            self.db.refresh(obj)
+            return obj
+        except Exception as e:
+            print(f"Error saving resume: {e}")
+            return None

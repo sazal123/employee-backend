@@ -110,6 +110,9 @@ class EmployeeRead(BaseModel):
     skills: Optional[List[SkillRead]] = None
     is_active: bool
     profile_picture: Optional[str]
+    resume_path: Optional[str]
+    resume_title: Optional[str]
+    resume_type: Optional[str]
     created_at: datetime
     updated_at: datetime
 
