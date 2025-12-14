@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session, selectinload
 from ..models.employee import Employee
 from ..models.tag import Tag
+from ..models.skill import Skill
 from ..schemas.employee import EmployeeCreate, EmployeeUpdate
 import os
 import base64
@@ -79,7 +80,7 @@ class EmployeeRepository:
 
     def get_all(self, skip: int = 0, limit: int = 12, search: str = None, is_active: bool = None, 
                 department_id: int = None, employment_type: str = None):
-        query = self.db.query(Employee).options(selectinload(Employee.tags))
+        query = self.db.query(Employee).options(selectinload(Employee.tags), selectinload(Employee.skills))
 
         if search:
             query = query.filter(
@@ -102,7 +103,7 @@ class EmployeeRepository:
         return items, total
 
     def get_by_id(self, id: int):
-        return self.db.query(Employee).options(selectinload(Employee.tags)).filter(Employee.id == id).first()
+        return self.db.query(Employee).options(selectinload(Employee.tags), selectinload(Employee.skills)).filter(Employee.id == id).first()
 
     def update(self, id: int, data: EmployeeUpdate):
         obj = self.get_by_id(id)
@@ -147,6 +148,40 @@ class EmployeeRepository:
         self.db.commit()
         self.db.refresh(obj)
         return obj
+
+    def attach_skill(self, employee_id: int, skill_id: int):
+        """Attach a skill to an employee"""
+        employee = self.get_by_id(employee_id)
+        if not employee:
+            return None
+        
+        skill = self.db.query(Skill).filter(Skill.id == skill_id).first()
+        if not skill:
+            return None
+        
+        if skill not in employee.skills:
+            employee.skills.append(skill)
+            self.db.commit()
+            self.db.refresh(employee)
+        
+        return employee
+
+    def remove_skill(self, employee_id: int, skill_id: int):
+        """Remove a skill from an employee"""
+        employee = self.get_by_id(employee_id)
+        if not employee:
+            return None
+        
+        skill = self.db.query(Skill).filter(Skill.id == skill_id).first()
+        if not skill:
+            return None
+        
+        if skill in employee.skills:
+            employee.skills.remove(skill)
+            self.db.commit()
+            self.db.refresh(employee)
+        
+        return employee
 
     def delete(self, id: int):
         obj = self.get_by_id(id)

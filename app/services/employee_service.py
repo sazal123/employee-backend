@@ -60,3 +60,15 @@ class EmployeeService:
         if not deleted:
             raise HTTPException(404, "Employee not found")
         return {"message": "Deleted successfully"}
+
+    def attach_skill(self, employee_id: int, skill_id: int):
+        employee = self.repo.attach_skill(employee_id, skill_id)
+        if not employee:
+            raise HTTPException(404, "Employee or Skill not found")
+        return employee
+
+    def remove_skill(self, employee_id: int, skill_id: int):
+        employee = self.repo.remove_skill(employee_id, skill_id)
+        if not employee:
+            raise HTTPException(404, "Employee or Skill not found")
+        return employee

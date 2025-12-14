@@ -65,3 +65,19 @@ def update_employee(id: int, payload: EmployeeUpdate, db: Session = Depends(get_
 def delete_employee(id: int, db: Session = Depends(get_db)):
     service = EmployeeService(db)
     return service.delete(id)
+
+@router.post("/{employee_id}/skills/{skill_id}", response_model=dict)
+def attach_skill(employee_id: int, skill_id: int, db: Session = Depends(get_db)):
+    """Attach a skill to an employee"""
+    service = EmployeeService(db)
+    employee = service.attach_skill(employee_id, skill_id)
+    schema = EmployeeRead.from_orm(employee)
+    return {'success': True, 'data': schema, 'message': 'Skill attached successfully'}
+
+@router.delete("/{employee_id}/skills/{skill_id}", response_model=dict)
+def remove_skill(employee_id: int, skill_id: int, db: Session = Depends(get_db)):
+    """Remove a skill from an employee"""
+    service = EmployeeService(db)
+    employee = service.remove_skill(employee_id, skill_id)
+    schema = EmployeeRead.from_orm(employee)
+    return {'success': True, 'data': schema, 'message': 'Skill removed successfully'}

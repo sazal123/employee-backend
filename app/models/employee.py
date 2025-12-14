@@ -12,6 +12,14 @@ employee_tags = Table(
     Column('tag_id', Integer, ForeignKey('tags.id'), primary_key=True)
 )
 
+# Association table for employee-skill many-to-many relationship
+employee_skills = Table(
+    'employee_skills',
+    Base.metadata,
+    Column('employee_id', Integer, ForeignKey('employees.id'), primary_key=True),
+    Column('skill_id', Integer, ForeignKey('skills.id'), primary_key=True)
+)
+
 
 class Employee(Base):
     __tablename__ = 'employees'
@@ -66,3 +74,4 @@ class Employee(Base):
     job_title = relationship('JobTitle', backref='employees')
     work_location = relationship('WorkLocation', backref='employees')
     tags = relationship('Tag', secondary=employee_tags, backref='employees')
+    skills = relationship('Skill', secondary=employee_skills, backref='employees')
